@@ -61,5 +61,5 @@ This project reimagines Snakes & Ladders as a **career journey simulator**:
 
 1. Download or clone the repository:
    ```bash
-   git clone https://github.com/your-username/career-climb-game.git
+   git clone https://github.com/ravizf/career-climb-ai-edition
    
