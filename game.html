@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Climb: AI Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            background-attachment: fixed;
+            overflow: auto;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+
+        .board-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, rgba(51, 65, 85, 0.5), rgba(30, 41, 59, 0.5));
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 6px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .board-cell:hover {
+            background: linear-gradient(135deg, rgba(51, 65, 85, 0.8), rgba(30, 41, 59, 0.8));
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+
+        .token {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            box-shadow: 0 0 12px;
+            position: absolute;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .token-human {
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.8);
+            color: white;
+        }
+
+        .token-ai {
+            background: linear-gradient(135deg, #f43f5e, #ec4899);
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.8);
+            color: white;
+        }
+
+        .ladder {
+            stroke: #10b981;
+            stroke-width: 3;
+            stroke-dasharray: 5,5;
+            filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.6));
+        }
+
+        .snake {
+            stroke: #ef4444;
+            stroke-width: 3;
+            filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.6));
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 8px;
+            padding: 16px 24px;
+            color: #e2e8f0;
+            animation: slideIn 0.3s ease-out;
+            z-index: 50;
+            max-width: 300px;
+            backdrop-filter: blur(10px);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .glow-blue {
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+        }
+
+        .glow-red {
+            box-shadow: 0 0 20px rgba(244, 63, 94, 0.5);
+        }
+
+        .win-animation {
+            animation: bounce 0.6s ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .xp-bar {
+            background: linear-gradient(90deg, #a855f7, #8b5cf6);
+            transition: width 0.3s ease;
+        }
+
+        .mode-select {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .mode-btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid rgba(148, 163, 184, 0.3);
+            color: #cbd5e1;
+            background: rgba(30, 41, 59, 0.5);
+        }
+
+        .mode-btn.active {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+
+        .choice-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .choice-card {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 2px solid rgba(56, 189, 248, 0.3);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .choice-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 14px;
+        }
+
+        .choice-btn-yes {
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            color: white;
+        }
+
+        .choice-btn-yes:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+        }
+
+        .choice-btn-no {
+            background: linear-gradient(135deg, #64748b, #475569);
+            color: white;
+        }
+
+        .choice-btn-no:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(100, 116, 139, 0.6);
+        }
+
+        /* Mobile fixes */
+        @media (max-width: 768px) {
+            body {
+                overflow: auto;
+            }
+
+            .board-container {
+                min-height: 100vh;
+                padding-bottom: 20px;
+            }
+
+            .toast {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+        }
+
+        .event-log-item {
+            padding: 8px 12px;
+            background: rgba(51, 65, 85, 0.4);
+            border-left: 3px solid #38bdf8;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .leaderboard {
+            background: rgba(51, 65, 85, 0.3);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .leaderboard-score {
+            font-size: 24px;
+            font-weight: 800;
+            color: #10b981;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row">
+    <!-- Mode Selection Modal -->
+    <div id="modeModal" class="choice-overlay">
+        <div class="choice-card">
+            <h2 class="text-3xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">
+                Choose Your Path 🎯
+            </h2>
+            <p class="text-slate-300 mb-8">Select difficulty to start your career climb!</p>
+            <div class="flex flex-col gap-3">
+                <button onclick="startGame('easy')" class="choice-btn choice-btn-yes">
+                    🌱 Easy - More Ladders
+                </button>
+                <button onclick="startGame('normal')" class="choice-btn choice-btn-yes">
+                    ⚡ Normal - Balanced
+                </button>
+                <button onclick="startGame('hard')" class="choice-btn choice-btn-no">
+                    🔥 Hard - More Snakes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Container -->
+    <div id="gameContainer" class="hidden">
+        <div class="flex flex-col md:flex-row h-screen overflow-hidden">
+            <!-- Left Sidebar -->
+            <aside class="w-full md:w-96 glass border-r border-slate-700 flex flex-col p-6 overflow-y-auto md:overflow-y-auto">
+                <!-- Title -->
+                <div class="mb-6">
+                    <h1 class="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500 mb-1">
+                        Career Climb
+                    </h1>
+                    <p class="text-slate-400 text-sm">🤖 AI Edition | Mode: <span id="modeLabel" class="text-sky-400 font-bold">Normal</span></p>
+                </div>
+
+                <!-- Mode Selector -->
+                <div class="mb-6 pb-6 border-b border-slate-700">
+                    <p class="text-xs text-slate-500 font-semibold mb-2">DIFFICULTY</p>
+                    <div class="mode-select">
+                        <button class="mode-btn active" onclick="changeMode('easy')" id="easyBtn">🌱 Easy</button>
+                        <button class="mode-btn" onclick="changeMode('normal')" id="normalBtn">⚡ Normal</button>
+                        <button class="mode-btn" onclick="changeMode('hard')" id="hardBtn">🔥 Hard</button>
+                    </div>
+                </div>
+
+                <!-- Player Stats -->
+                <div class="space-y-4 mb-6">
+                    <!-- Human -->
+                    <div id="human-card" class="p-4 rounded-xl border border-sky-500/30 bg-sky-500/10 transition-all duration-300">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-bold flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></div>
+                                You
+                            </span>
+                            <span id="human-pos" class="text-2xl font-black text-sky-400">1</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2 mb-2">
+                            <div id="human-progress" class="bg-sky-400 h-2 rounded-full" style="width: 1%"></div>
+                        </div>
+                        <div class="text-xs text-slate-300 flex justify-between mb-2">
+                            <span id="human-xp">XP: 0</span>
+                            <span id="human-level">Lvl 1</span>
+                        </div>
+                    </div>
+
+                    <!-- AI -->
+                    <div id="ai-card" class="p-4 rounded-xl border border-rose-500/10 bg-slate-800/50 transition-all duration-300">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-bold flex items-center gap-2 text-slate-300">
+                                <div class="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_#f43f5e]"></div>
+                                AI Opponent
+                            </span>
+                            <span id="ai-pos" class="text-2xl font-black text-rose-500 opacity-70">1</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2 mb-2">
+                            <div id="ai-progress" class="bg-rose-500 h-2 rounded-full opacity-70" style="width: 1%"></div>
+                        </div>
+                        <div class="text-xs text-slate-500 flex justify-between">
+                            <span id="ai-xp">XP: 0</span>
+                            <span id="ai-level">Lvl 1</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Best Score -->
+                <div class="leaderboard mb-6">
+                    <p class="text-xs text-slate-400 mb-1">🏆 BEST SCORE</p>
+                    <div class="leaderboard-score" id="bestScore">0</div>
+                </div>
+
+                <!-- Current Event -->
+                <div class="mb-6 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/30">
+                    <p class="text-xs text-slate-500 font-semibold mb-2">LAST EVENT</p>
+                    <p id="current-event" class="text-sm font-semibold text-indigo-300">Ready to roll! 🎲</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="space-y-3 mb-6">
+                    <button onclick="rollDice()" class="w-full py-3 px-4 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold rounded-lg hover:shadow-lg hover:shadow-sky-500/50 transition-all duration-300 text-lg">
+                        🎲 Roll Dice
+                    </button>
+                    <button onclick="resetGame()" class="w-full py-2 px-4 bg-slate-700 text-slate-200 font-semibold rounded-lg hover:bg-slate-600 transition-all duration-300">
+                        🔄 Reset Game
+                    </button>
+                </div>
+
+                <!-- Event Log -->
+                <div class="flex-1">
+                    <p class="text-xs text-slate-500 font-semibold mb-2">📋 EVENT LOG</p>
+                    <div id="event-log" class="space-y-1 text-left overflow-y-auto max-h-48">
+                        <div class="event-log-item">Game started!</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Game Board -->
+            <main class="flex-1 glass flex flex-col items-center justify-center p-4 md:p-8 overflow-auto board-container">
+                <div class="w-full max-w-3xl">
+                    <!-- Board Title -->
+                    <h2 class="text-2xl font-bold text-slate-200 mb-6 text-center">CAREER BOARD 📈</h2>
+
+                    <!-- Game Board -->
+                    <div id="board" class="grid grid-cols-10 gap-1 bg-slate-800/50 p-4 rounded-xl border border-slate-600 auto-rows-fr" style="aspect-ratio: 1;">
+                    </div>
+
+                    <!-- SVG for Ladders & Snakes -->
+                    <svg id="connections" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></svg>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GAME STATE ====================
+        const BOARD_SIZE = 100;
+        const GRID_COLS = 10;
+
+        let gameState = {
+            humanPos: 1,
+            aiPos: 1,
+            humanXP: 0,
+            aiXP: 0,
+            humanLevel: 1,
+            aiLevel: 1,
+            turn: 'human',
+            gameOver: false,
+            mode: 'normal',
+            bestScore: localStorage.getItem('bestScore') ? parseInt(localStorage.getItem('bestScore')) : 0
+        };
+
+        // ==================== CAREER STORY EVENTS ====================
+        const CAREER_EVENTS = [
+            // GOOD EVENTS
+            { type: 'good', text: "🚀 Cracked Google Internship", xp: 15, move: 5 },
+            { type: 'good', text: "📈 Built Viral LinkedIn Project", xp: 12, move: 4 },
+            { type: 'good', text: "🏆 Won Hackathon", xp: 18, move: 6 },
+            { type: 'good', text: "⭐ Got Promotion", xp: 14, move: 5 },
+            { type: 'good', text: "💼 Landed Dream Job Offer", xp: 20, move: 8 },
+            { type: 'good', text: "📚 Mastered System Design", xp: 13, move: 4 },
+            { type: 'good', text: "🎯 Solved LeetCode Hard", xp: 10, move: 3 },
+            { type: 'good', text: "🤝 Built Strong Network", xp: 11, move: 3 },
+            
+            // BAD EVENTS
+            { type: 'bad', text: "😬 Ignored DSA Practice", xp: -8, move: -4 },
+            { type: 'bad', text: "😵 Burnout After Exams", xp: -10, move: -3 },
+            { type: 'bad', text: "❌ Failed Interview Round", xp: -12, move: -5 },
+            { type: 'bad', text: "😤 Procrastinated on Project", xp: -6, move: -2 },
+            { type: 'bad', text: "😒 Missed Networking Event", xp: -5, move: -2 },
+            { type: 'bad', text: "💤 Slept Through Deadline", xp: -11, move: -4 },
+            { type: 'bad', text: "🚨 Bug in Production Code", xp: -9, move: -3 },
+            { type: 'bad', text: "😓 Technical Interview Fail", xp: -13, move: -5 }
+        ];
+
+        // ==================== BOARD STRUCTURE ====================
+        const BOARD_CONFIG = {
+            easy: {
+                snakes: { 32: 10, 48: 26, 84: 59 },
+                ladders: { 4: 22, 12: 35, 28: 55, 45: 75, 61: 88 },
+                eventProb: 0.35
+            },
+            normal: {
+                snakes: { 32: 10, 48: 26, 67: 43, 84: 59, 96: 72 },
+                ladders: { 4: 22, 12: 35, 28: 55, 45: 75, 61: 88 },
+                eventProb: 0.3
+            },
+            hard: {
+                snakes: { 16: 8, 32: 10, 48: 26, 67: 43, 84: 59, 96: 72 },
+                ladders: { 4: 22, 12: 35, 28: 55, 45: 75 },
+                eventProb: 0.25
+            }
+        };
+
+        // ==================== LEVEL & XP ====================
+        const XP_THRESHOLDS = [0, 30, 70, 120, 180, 250, 330, 420, 520, 630];
+
+        function calculateLevel(xp) {
+            for (let i = XP_THRESHOLDS.length - 1; i >= 0; i--) {
+                if (xp >= XP_THRESHOLDS[i]) return i + 1;
+            }
+            return 1;
+        }
+
+        // ==================== GAME INITIALIZATION ====================
+        function startGame(mode) {
+            gameState.mode = mode;
+            document.getElementById('modeModal').classList.add('hidden');
+            document.getElementById('gameContainer').classList.remove('hidden');
+            updateModeButtons();
+            updateUI();
+            drawBoard();
+            loadBestScore();
+        }
+
+        function changeMode(mode) {
+            gameState.mode = mode;
+            updateModeButtons();
+            // Reset game with new mode
+            gameState.humanPos = 1;
+            gameState.aiPos = 1;
+            gameState.humanXP = 0;
+            gameState.aiXP = 0;
+            gameState.humanLevel = 1;
+            gameState.aiLevel = 1;
+            gameState.turn = 'human';
+            gameState.gameOver = false;
+            updateUI();
+            logEvent('Game reset to ' + mode + ' mode!');
+        }
+
+        function updateModeButtons() {
+            const modes = ['easy', 'normal', 'hard'];
+            modes.forEach(m => {
+                const btn = document.getElementById(m + 'Btn');
+                if (m === gameState.mode) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            const labels = { easy: '🌱 Easy', normal: '⚡ Normal', hard: '🔥 Hard' };
+            document.getElementById('modeLabel').textContent = labels[gameState.mode];
+        }
+
+        // ==================== BOARD RENDERING ====================
+        function drawBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+
+            for (let i = 1; i <= BOARD_SIZE; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'board-cell';
+                cell.textContent = i;
+                cell.id = 'cell-' + i;
+                board.appendChild(cell);
+            }
+
+            drawConnections();
+            updateTokenPositions();
+        }
+
+        function drawConnections() {
+            const svg = document.getElementById('connections');
+            svg.innerHTML = '';
+
+            const config = BOARD_CONFIG[gameState.mode];
+            const board = document.getElementById('board');
+            const boardRect = board.getBoundingClientRect();
+
+            // Draw ladders
+            for (let [start, end] of Object.entries(config.ladders)) {
+                drawConnection(parseInt(start), parseInt(end), 'ladder', svg, board);
+            }
+
+            // Draw snakes
+            for (let [start, end] of Object.entries(config.snakes)) {
+                drawConnection(parseInt(start), parseInt(end), 'snake', svg, board);
+            }
+        }
+
+        function drawConnection(from, to, type, svg, board) {
+            const fromCell = document.getElementById('cell-' + from);
+            const toCell = document.getElementById('cell-' + to);
+
+            if (!fromCell || !toCell) return;
+
+            const fromRect = fromCell.getBoundingClientRect();
+            const toRect = toCell.getBoundingClientRect();
+            const boardRect = board.getBoundingClientRect();
+
+            const x1 = fromRect.left - boardRect.left + fromRect.width / 2;
+            const y1 = fromRect.top - boardRect.top + fromRect.height / 2;
+            const x2 = toRect.left - boardRect.left + toRect.width / 2;
+            const y2 = toRect.top - boardRect.top + toRect.height / 2;
+
+            if (type === 'ladder') {
+                // Draw ladder
+                const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line1.setAttribute('x1', x1 - 8);
+                line1.setAttribute('y1', y1);
+                line1.setAttribute('x2', x2 - 8);
+                line1.setAttribute('y2', y2);
+                line1.setAttribute('class', 'ladder');
+                svg.appendChild(line1);
+
+                const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line2.setAttribute('x1', x1 + 8);
+                line2.setAttribute('y1', y1);
+                line2.setAttribute('x2', x2 + 8);
+                line2.setAttribute('y2', y2);
+                line2.setAttribute('class', 'ladder');
+                svg.appendChild(line2);
+            } else {
+                // Draw curved snake
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const midX = (x1 + x2) / 2 + dy * 0.2;
+                const midY = (y1 + y2) / 2 - dx * 0.2;
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', `M ${x1} ${y1} Q ${midX} ${midY} ${x2} ${y2}`);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('class', 'snake');
+                svg.appendChild(path);
+            }
+        }
+
+        function updateTokenPositions() {
+            // Remove old tokens
+            document.querySelectorAll('.token').forEach(t => t.remove());
+
+            const config = BOARD_CONFIG[gameState.mode];
+            const board = document.getElementById('board');
+
+            // Human token
+            const humanCell = document.getElementById('cell-' + gameState.humanPos);
+            if (humanCell) {
+                const humanToken = document.createElement('div');
+                humanToken.className = 'token token-human';
+                humanToken.textContent = 'YOU';
+                humanToken.style.position = 'absolute';
+                humanCell.appendChild(humanToken);
+            }
+
+            // AI token
+            const aiCell = document.getElementById('cell-' + gameState.aiPos);
+            if (aiCell) {
+                const aiToken = document.createElement('div');
+                aiToken.className = 'token token-ai';
+                aiToken.textContent = '🤖';
+                aiToken.style.position = 'absolute';
+                aiCell.appendChild(aiToken);
+            }
+        }
+
+        // ==================== DICE ROLL & MOVEMENT ====================
+        function rollDice() {
+            if (gameState.gameOver || gameState.turn !== 'human') return;
+
+            const dice = Math.floor(Math.random() * 6) + 1;
+            let newPos = gameState.humanPos + dice;
+
+            logEvent(`🎲 You rolled ${dice}`);
+
+            // Check for snake/ladder
+            const config = BOARD_CONFIG[gameState.mode];
+            if (config.snakes[newPos]) {
+                const oldPos = newPos;
+                newPos = config.snakes[newPos];
+                logEvent(`🐍 Snake! ${oldPos} → ${newPos}`);
+            } else if (config.ladders[newPos]) {
+                const oldPos = newPos;
+                newPos = config.ladders[newPos];
+                logEvent(`🪜 Ladder! ${oldPos} → ${newPos}`);
+            }
+
+            // Bounce back if over 100
+            if (newPos > BOARD_SIZE) {
+                newPos = BOARD_SIZE - (newPos - BOARD_SIZE);
+                logEvent(`⚠️ Bounced back to ${newPos}!`);
+            }
+
+            gameState.humanPos = newPos;
+
+            // Check for event
+            if (Math.random() < BOARD_CONFIG[gameState.mode].eventProb) {
+                handleEventWithChoice();
+            } else {
+                finishTurn();
+            }
+        }
+
+        // ==================== EVENT SYSTEM WITH CHOICES ====================
+        function handleEventWithChoice() {
+            const event = CAREER_EVENTS[Math.floor(Math.random() * CAREER_EVENTS.length)];
+            
+            let choice1Text = '';
+            let choice1Move = 0;
+            let choice1XP = 0;
+            let choice2Text = '';
+            let choice2Move = 0;
+            let choice2XP = 0;
+
+            if (event.type === 'good') {
+                choice1Text = `✅ Accept "${event.text}" - Get +${event.move} move & ${event.xp} XP`;
+                choice1Move = event.move;
+                choice1XP = event.xp;
+                choice2Text = `❌ Reject and focus on learning - Skip`;
+                choice2Move = 0;
+                choice2XP = 3;
+            } else {
+                choice1Text = `😤 "I'll recover from this" - Move back ${Math.abs(event.move)} but learn (+5 XP)`;
+                choice1Move = event.move;
+                choice1XP = 5;
+                choice2Text = `🚀 "Push through it!" - Keep position but get ${Math.abs(event.xp)} XP`;
+                choice2Move = 0;
+                choice2XP = Math.abs(event.xp);
+            }
+
+            showChoiceOverlay(
+                event.text,
+                choice1Text,
+                choice2Text,
+                () => applyChoice(choice1Move, choice1XP),
+                () => applyChoice(choice2Move, choice2XP)
+            );
+        }
+
+        function showChoiceOverlay(eventText, choice1, choice2, callback1, callback2) {
+            const overlay = document.createElement('div');
+            overlay.className = 'choice-overlay';
+            overlay.innerHTML = `
+                <div class="choice-card">
+                    <h3 class="text-2xl font-bold mb-4 text-sky-300">${eventText}</h3>
+                    <p class="text-slate-300 mb-6 text-sm">What do you do?</p>
+                    <div class="flex flex-col gap-3">
+                        <button class="choice-btn choice-btn-yes">${choice1}</button>
+                        <button class="choice-btn choice-btn-no">${choice2}</button>
+                    </div>
+                </div>
+            `;
+
+            const buttons = overlay.querySelectorAll('button');
+            buttons[0].onclick = () => {
+                overlay.remove();
+                callback1();
+            };
+            buttons[1].onclick = () => {
+                overlay.remove();
+                callback2();
+            };
+
+            document.body.appendChild(overlay);
+        }
+
+        function applyChoice(moveBonus, xpGain) {
+            gameState.humanPos += moveBonus;
+            gameState.humanXP += xpGain;
+
+            // Bounce back if over 100
+            if (gameState.humanPos > BOARD_SIZE) {
+                gameState.humanPos = BOARD_SIZE - (gameState.humanPos - BOARD_SIZE);
+            }
+            if (gameState.humanPos < 1) {
+                gameState.humanPos = 1;
+            }
+
+            const newLevel = calculateLevel(gameState.humanXP);
+            if (newLevel > gameState.humanLevel) {
+                gameState.humanLevel = newLevel;
+                logEvent(`⭐ LEVEL UP! Now Level ${newLevel}!`);
+                showToast(`🎉 Level Up to ${newLevel}!`);
+            }
+
+            logEvent(`${moveBonus > 0 ? '+' : ''}${moveBonus} move, +${xpGain} XP`);
+            finishTurn();
+        }
+
+        function finishTurn() {
+            updateUI();
+
+            // Check win condition
+            if (gameState.humanPos >= BOARD_SIZE) {
+                gameState.gameOver = true;
+                document.getElementById('human-card').classList.add('win-animation');
+                
+                // Update best score
+                if (gameState.humanPos > gameState.bestScore) {
+                    gameState.bestScore = gameState.humanPos;
+                    localStorage.setItem('bestScore', gameState.bestScore);
+                }
+
+                logEvent(`🏆 YOU WIN! Final Level: ${gameState.humanLevel}, XP: ${gameState.humanXP}`);
+                showToast(`🎊 YOU WIN! Level ${gameState.humanLevel}`);
+                return;
+            }
+
+            // AI turn
+            gameState.turn = 'ai';
+            setTimeout(aiTurn, 1500);
+        }
+
+        // ==================== AI LOGIC ====================
+        function aiStrategy(pos) {
+            const config = BOARD_CONFIG[gameState.mode];
+            
+            // Smart AI based on position
+            if (pos < 30) {
+                // Early game: aggressive
+                return Math.floor(Math.random() * 4) + 2;
+            } else if (pos < 70) {
+                // Mid game: balanced
+                return Math.floor(Math.random() * 3) + 1;
+            } else {
+                // Late game: cautious but sometimes risky
+                return Math.random() < 0.3 ? 1 : 2;
+            }
+        }
+
+        function aiTurn() {
+            const strategicBonus = aiStrategy(gameState.aiPos);
+            const dice = Math.floor(Math.random() * 6) + 1 + strategicBonus;
+            let newPos = gameState.aiPos + dice;
+
+            logEvent(`🤖 AI rolled ${dice - strategicBonus} (strategy: +${strategicBonus})`);
+
+            // Check for snake/ladder
+            const config = BOARD_CONFIG[gameState.mode];
+            if (config.snakes[newPos]) {
+                const oldPos = newPos;
+                newPos = config.snakes[newPos];
+                logEvent(`🐍 AI hit snake! ${oldPos} → ${newPos}`);
+            } else if (config.ladders[newPos]) {
+                const oldPos = newPos;
+                newPos = config.ladders[newPos];
+                logEvent(`🪜 AI climbed ladder! ${oldPos} → ${newPos}`);
+            }
+
+            // Bounce back
+            if (newPos > BOARD_SIZE) {
+                newPos = BOARD_SIZE - (newPos - BOARD_SIZE);
+            }
+
+            gameState.aiPos = newPos;
+            gameState.aiXP += Math.floor(Math.random() * 8) + 3;
+            gameState.aiLevel = calculateLevel(gameState.aiXP);
+
+            // Check win
+            if (gameState.aiPos >= BOARD_SIZE) {
+                gameState.gameOver = true;
+                document.getElementById('ai-card').classList.add('glow-red');
+                logEvent(`🤖 AI WINS! Level ${gameState.aiLevel}`);
+                showToast(`😬 AI Won! Level ${gameState.aiLevel}`);
+                updateUI();
+                return;
+            }
+
+            gameState.turn = 'human';
+            updateUI();
+        }
+
+        // ==================== UI UPDATES ====================
+        function updateUI() {
+            // Positions
+            document.getElementById('human-pos').textContent = gameState.humanPos;
+            document.getElementById('ai-pos').textContent = gameState.aiPos;
+
+            // Progress bars
+            document.getElementById('human-progress').style.width = (gameState.humanPos / BOARD_SIZE * 100) + '%';
+            document.getElementById('ai-progress').style.width = (gameState.aiPos / BOARD_SIZE * 100) + '%';
+
+            // XP & Levels
+            document.getElementById('human-xp').textContent = `XP: ${gameState.humanXP}`;
+            document.getElementById('human-level').textContent = `Lvl ${gameState.humanLevel}`;
+            document.getElementById('ai-xp').textContent = `XP: ${gameState.aiXP}`;
+            document.getElementById('ai-level').textContent = `Lvl ${gameState.aiLevel}`;
+
+            // Best score
+            loadBestScore();
+
+            // Update tokens
+            updateTokenPositions();
+
+            // Update connections
+            drawConnections();
+        }
+
+        function loadBestScore() {
+            const stored = localStorage.getItem('bestScore');
+            if (stored) {
+                gameState.bestScore = parseInt(stored);
+            }
+            document.getElementById('bestScore').textContent = gameState.bestScore;
+        }
+
+        // ==================== UTILITIES ====================
+        function logEvent(msg) {
+            const log = document.getElementById('event-log');
+            const item = document.createElement('div');
+            item.className = 'event-log-item';
+            item.textContent = msg;
+            log.insertBefore(item, log.firstChild);
+            if (log.children.length > 10) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        function resetGame() {
+            gameState = {
+                humanPos: 1,
+                aiPos: 1,
+                humanXP: 0,
+                aiXP: 0,
+                humanLevel: 1,
+                aiLevel: 1,
+                turn: 'human',
+                gameOver: false,
+                mode: gameState.mode,
+                bestScore: gameState.bestScore
+            };
+            document.getElementById('human-card').classList.remove('win-animation');
+            document.getElementById('ai-card').classList.remove('glow-red');
+            document.getElementById('event-log').innerHTML = '<div class="event-log-item">Game reset!</div>';
+            updateUI();
+            logEvent('Ready for next round! 🎯');
+        }
+
+        // ==================== INITIALIZATION ====================
+        window.addEventListener('load', () => {
+            loadBestScore();
+        });
+    </script>
+</body>
+</html>
