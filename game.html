@@ -4,29 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Career Climb: AI Snakes & Ladders</title>
-    <!-- Tailwind CSS for rapid modern styling -->
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom Styles for Glows and Animations */
+        
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #07111f 0%, #172554 45%, #312e81 100%);
-            color: #f8fafc; /* tailwind slate-50 */
+            color: #f8fafc; 
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* Glassmorphism utility */
+        
         .glass {
-            background: rgba(30, 41, 59, 0.7); /* slate-800 with opacity */
+            background: rgba(30, 41, 59, 0.7); 
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        /* Board layout */
+        
         #board-container {
             display: grid;
             grid-template-columns: repeat(10, 1fr);
@@ -36,7 +36,7 @@
             padding: 4px;
             border-radius: 12px;
             position: relative;
-            box-shadow: 0 0 40px rgba(99, 102, 241, 0.15); /* Indigo glow */
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.15); 
         }
 
         #victoryScreen {
@@ -54,7 +54,7 @@
             margin: 20px auto;
         }
 
-        /* Individual Cell */
+        
         .cell {
             background-color: rgba(30, 41, 59, 0.9);
             border-radius: 4px;
@@ -75,40 +75,40 @@
             font-size: 12px;
         }
 
-        /* Alternate cell colors for checkerboard pattern */
+        
         .cell:nth-child(even) { background-color: rgba(15, 23, 42, 0.8); }
 
-        /* Highlight effects for cells with players */
+        
         .cell.has-human {
-            box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.5); /* Sky blue glow */
+            box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.5); 
             border: 1px solid rgba(56, 189, 248, 0.8);
             color: rgba(56, 189, 248, 0.8);
         }
         .cell.has-ai {
-            box-shadow: inset 0 0 15px rgba(244, 63, 94, 0.5); /* Rose red glow */
+            box-shadow: inset 0 0 15px rgba(244, 63, 94, 0.5); 
             border: 1px solid rgba(244, 63, 94, 0.8);
             color: rgba(244, 63, 94, 0.8);
         }
-        /* If both are on the same cell */
+        
         .cell.has-human.has-ai {
-            box-shadow: inset 0 0 15px rgba(168, 85, 247, 0.5); /* Purple mix */
+            box-shadow: inset 0 0 15px rgba(168, 85, 247, 0.5); 
             border: 1px solid rgba(168, 85, 247, 0.8);
         }
 
-        /* Player Tokens */
+        
         .token {
             position: absolute;
             width: 20px;
             height: 20px;
             border-radius: 50%;
             z-index: 20;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy movement */
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
         }
         
         .token.human {
             background-color: #38bdf8;
             box-shadow: 0 0 10px #38bdf8, inset 0 0 5px white;
-            /* Offset slightly if sharing a cell */
+            
             transform: translate(-6px, -6px); 
         }
 
@@ -118,19 +118,19 @@
             transform: translate(6px, 6px);
         }
 
-        /* SVG Overlay for Connections */
+        
         #svg-layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Let clicks pass through to cells */
+            pointer-events: none; 
             z-index: 5;
         }
 
         .ladder-line {
-            stroke: #10b981; /* Emerald */
+            stroke: #10b981; 
             stroke-width: 3;
             stroke-dasharray: 6, 4;
             opacity: 0.6;
@@ -138,7 +138,7 @@
         }
 
         .snake-line {
-            stroke: #e11d48; /* Rose */
+            stroke: #e11d48; 
             stroke-width: 4;
             fill: none;
             opacity: 0.6;
@@ -146,7 +146,7 @@
             stroke-linecap: round;
         }
 
-        /* Dice Animation */
+        
         @keyframes rollDiceAnim {
             0% { transform: rotate(0deg) scale(1); }
             25% { transform: rotate(90deg) scale(1.2); }
@@ -165,14 +165,14 @@
             box-shadow: 0 0 18px currentColor, inset 0 0 15px rgba(255, 255, 255, 0.12);
         }
 
-        /* Notification Toast Animation */
+        
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
         .toast { animation: slideIn 0.3s ease-out forwards; }
 
-        /* Custom Scrollbar for logs */
+        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
@@ -213,7 +213,7 @@
 </head>
 <body class="min-h-screen flex flex-col md:flex-row">
 
-    <!-- Left Sidebar: Controls & Stats -->
+    
     <aside class="w-full md:w-96 glass border-r border-slate-700 flex flex-col p-6 z-20 shadow-xl">
         <div class="mb-8">
             <h1 class="text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500 mb-2">
@@ -222,9 +222,9 @@
             <p class="text-slate-300 text-sm leading-relaxed">Roll the dice &rarr; Move forward &rarr; Climb ladders &rarr; Avoid snakes &rarr; Reach 100 to win!</p>
         </div>
 
-        <!-- Player Stats -->
+        
         <div class="space-y-4 mb-8">
-            <!-- Human Card -->
+            
             <div id="human-card" class="p-4 rounded-xl border border-sky-500/30 bg-sky-500/10 transition-all duration-300">
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-bold flex items-center gap-2">
@@ -238,7 +238,7 @@
                 </div>
             </div>
 
-            <!-- AI Card -->
+            
             <div id="ai-card" class="p-4 rounded-xl border border-rose-500/10 bg-slate-800/50 transition-all duration-300">
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-bold flex items-center gap-2 text-slate-300">
@@ -253,14 +253,14 @@
             </div>
         </div>
 
-        <!-- Win Tracker -->
+        
         <div class="mb-8 rounded-lg border border-white/10 bg-slate-900/60 p-3 text-center text-sm font-bold text-slate-200 shadow-[0_0_18px_rgba(14,165,233,0.12)]">
             You Wins: <span id="human-wins" class="text-sky-300">0</span>
             <span class="mx-2 text-slate-500">|</span>
             AI Wins: <span id="ai-wins" class="text-rose-300">0</span>
         </div>
 
-        <!-- Dice & Actions -->
+        
         <div class="flex flex-col items-center mb-8">
             <div class="text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider" id="turn-indicator">
                 Your Turn
@@ -278,7 +278,7 @@
             </button>
         </div>
 
-        <!-- Event Log -->
+        
         <div class="flex-1 flex flex-col min-h-[150px]">
             <h3 class="text-sm font-semibold text-slate-400 mb-2 uppercase tracking-wider">Event Log</h3>
             <div id="log-container" class="flex-1 overflow-y-auto space-y-2 pr-2 text-sm">
@@ -286,32 +286,32 @@
             </div>
         </div>
 
-        <!-- Reset Button -->
+        
         <button id="reset-btn" class="mt-4 py-2 px-4 rounded border border-slate-600 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm">
             Reset Game
         </button>
     </aside>
 
-    <!-- Right Main Area: The Board -->
+    
     <main class="flex-1 flex items-center justify-center p-4 md:p-8 relative bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-800 via-slate-900 to-black">
         
-        <!-- Toast Notification Area (Overlay) -->
+        
         <div id="toast-container" class="absolute top-8 right-8 z-50 flex flex-col gap-3 pointer-events-none w-72"></div>
 
-        <!-- The Game Board -->
+        
         <div class="w-full max-w-2xl aspect-square relative" id="board-wrapper">
             <div class="absolute -top-10 left-0 right-0 text-center text-sm font-bold uppercase tracking-wider text-slate-300">10x10 Snakes &amp; Ladders Board</div>
             <div id="board-container" class="board w-full h-full">
-                <!-- Cells generated by JS -->
+                
             </div>
             
-            <!-- SVG Layer for visual paths -->
+            
             <svg id="svg-layer">
-                <!-- Lines generated by JS -->
+                
             </svg>
         </div>
 
-        <!-- Game Over Modal (Hidden by default) -->
+        
         <div id="victoryScreen" class="fixed inset-0 bg-black/80 z-[100] hidden items-center justify-center backdrop-blur-sm">
             <div class="glass p-8 rounded-2xl max-w-md w-full text-center border border-indigo-500/30 transform scale-95 transition-transform duration-300" id="modal-content">
                 <h2 class="text-4xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-500" id="winner-title">Victory!</h2>
@@ -324,19 +324,15 @@
     </main>
 
     <script>
-        /**
-         * Career Climb - Game Logic
-         */
-
-        // --- Configuration & Constants ---
         
-        // 1. Ladders (Start -> End)
+
+        
+
         const LADDERS = { 4: 22, 12: 35, 28: 55, 45: 75, 61: 88 };
         
-        // 2. Snakes (Start -> End)
+
         const SNAKES = { 32: 10, 48: 26, 67: 43, 84: 59, 96: 72 };
 
-        // 3. Career Events (Random Popups)
         const EVENTS = [
             { type: 'good', text: "Promotion! You skipped a level.", move: 3 },
             { type: 'good', text: "Stellar Performance Review.", move: 2 },
@@ -346,20 +342,18 @@
             { type: 'bad', text: "Missed Critical Deadline.", move: -1 }
         ];
 
-        // --- State Variables ---
         let state = {
             humanPos: 1,
             aiPos: 1,
-            currentPlayer: 'human', // 'human' or 'ai'
+            currentPlayer: 'human',
             isGameOver: false,
             isAnimating: false,
-            boardMap: [] // Array of numbers mapping visual grid cells to 1-100 logic
+            boardMap: []
         };
 
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const audioCtx = new AudioContext();
 
-        // --- DOM Elements ---
         const els = {
             board: document.getElementById('board-container'),
             svgLayer: document.getElementById('svg-layer'),
@@ -399,8 +393,6 @@
             ai: Number(localStorage.getItem('careerClimbAiWins') || 0)
         };
 
-        // --- Initialization ---
-
         function init() {
             els.modal.style.display = 'none';
             els.dice.innerHTML = '&#127922;';
@@ -412,20 +404,13 @@
             updateUI();
             updateWinsUI();
             
-            // Handle window resize to redraw SVG lines correctly
+
             window.addEventListener('resize', drawSnakesAndLadders);
             els.rollBtn.addEventListener('click', handleHumanRoll);
             els.resetBtn.addEventListener('click', resetGame);
         }
 
-        /**
-         * Creates the Boustrophedon (zig-zag) numerical layout array.
-         * Visually, DOM renders top-to-bottom, left-to-right.
-         * Row 1 (top): 100 to 91
-         * Row 2: 81 to 90
-         * ...
-         * Row 10 (bottom): 1 to 10
-         */
+        
         function generateBoardLayout() {
             state.boardMap = [];
             for (let row = 10; row >= 1; row--) {
@@ -433,7 +418,7 @@
                 for (let col = 1; col <= 10; col++) {
                     rowNums.push((row - 1) * 10 + col);
                 }
-                // Alternate direction for even rows (10, 8, 6, 4, 2)
+
                 if (row % 2 === 0) {
                     rowNums.reverse();
                 }
@@ -441,9 +426,7 @@
             }
         }
 
-        /**
-         * Renders the HTML div cells for the board.
-         */
+        
         function renderBoard() {
             let board = document.querySelector(".board");
             board.innerHTML = '';
@@ -452,7 +435,7 @@
                 cell.className = 'cell';
                 cell.id = `cell-${num}`;
                 
-                // Add tiny markers for snakes/ladders start points
+
                 let marker = num;
                 if (LADDERS[num]) marker = `${num} 🪜`;
                 if (SNAKES[num]) marker = `${num} 🐍`;
@@ -462,31 +445,27 @@
             });
         }
 
-        /**
-         * Calculates % based coordinates for SVG lines based on the grid layout.
-         */
+        
         function getCoordinateForNumber(num) {
             const index = state.boardMap.indexOf(num);
             if (index === -1) return { x: 0, y: 0 };
             
-            // Grid is 10x10. Each cell is 10% width/height.
-            const row = Math.floor(index / 10); // 0 to 9 (top to bottom)
-            const col = index % 10; // 0 to 9 (left to right)
+
+            const row = Math.floor(index / 10);
+            const col = index % 10;
             
-            // Center of the cell in percentages
+
             return {
                 x: (col * 10) + 5,
                 y: (row * 10) + 5
             };
         }
 
-        /**
-         * Draws responsive SVG lines for Snakes and Ladders over the board.
-         */
+        
         function drawSnakesAndLadders() {
-            els.svgLayer.innerHTML = ''; // Clear existing
+            els.svgLayer.innerHTML = '';
             
-            // Draw Ladders (Straight dashed lines)
+
             for (const [start, end] of Object.entries(LADDERS)) {
                 const pos1 = getCoordinateForNumber(parseInt(start));
                 const pos2 = getCoordinateForNumber(end);
@@ -500,19 +479,17 @@
                 els.svgLayer.appendChild(line);
             }
 
-            // Draw Snakes (Curved paths)
             for (const [start, end] of Object.entries(SNAKES)) {
                 const pos1 = getCoordinateForNumber(parseInt(start));
                 const pos2 = getCoordinateForNumber(end);
                 
-                // Calculate a control point for the Bezier curve to make it "snakey"
-                // Bow out horizontally depending on relation
+
                 const midX = (pos1.x + pos2.x) / 2;
                 const midY = (pos1.y + pos2.y) / 2;
-                const offsetX = 15; // Curve amount
+                const offsetX = 15;
                 
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                // Q is quadratic bezier: Q controlX controlY, endX endY
+
                 const d = `M ${pos1.x}% ${pos1.y}% Q ${midX + offsetX}% ${midY}% ${pos2.x}% ${pos2.y}%`;
                 
                 path.setAttribute('d', d);
@@ -520,8 +497,6 @@
                 els.svgLayer.appendChild(path);
             }
         }
-
-        // --- Core Game Logic ---
 
         function playSound(type) {
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -577,20 +552,17 @@
         async function aiTurn() {
             if (state.isGameOver) return;
             
-            // Small delay to simulate AI "thinking"
+
             els.turnIndicator.innerText = aiPersonalities[Math.floor(Math.random() * aiPersonalities.length)];
             await sleep(800); 
             await executeTurn('ai', 'human');
         }
 
-        /**
-         * Master function coordinating a single turn sequence.
-         */
+        
         async function executeTurn(player, nextPlayer) {
             state.isAnimating = true;
             els.rollBtn.disabled = true;
 
-            // 1. Roll Dice
             els.dice.classList.add('rolling');
             const roll = Math.floor(Math.random() * 6) + 1;
             const diceFaces = ['&#9856;', '&#9857;', '&#9858;', '&#9859;', '&#9860;', '&#9861;'];
@@ -619,23 +591,20 @@
                 els.aiRollMessage.innerText = 'AI Bot waiting...';
             }
 
-            // 2. Calculate initial movement
             let currentPos = player === 'human' ? state.humanPos : state.aiPos;
             let newPos = currentPos + roll;
             
-            // Bounce back rule if rolling past 100 (Optional standard rule, implemented here)
+
             if (newPos > 100) {
                 const excess = newPos - 100;
                 newPos = 100 - excess;
                 logEvent(`Bounced off 100! Moving to ${newPos}.`, 'neutral');
             }
 
-            // Apply basic move
             updatePosition(player, newPos);
             updateUI();
-            await sleep(600); // Wait for visual move
+            await sleep(600);
 
-            // 3. Check Win Condition
             const humanPosition = state.humanPos;
             const aiPosition = state.aiPos;
             if (humanPosition >= 100 || aiPosition >= 100) {
@@ -643,18 +612,14 @@
                 return;
             }
 
-            // 4. Check Interactions (Snakes/Ladders/Events)
             await checkCellInteractions(player, newPos, nextPlayer);
         }
 
-        /**
-         * Evaluates what happens when a player lands on a specific cell.
-         */
+        
         async function checkCellInteractions(player, pos, nextPlayer) {
             let finalPos = pos;
             let interactionOccurred = false;
 
-            // Check Ladders
             if (LADDERS[pos]) {
                 finalPos = LADDERS[pos];
                 showToast("🪜 Ladder Found! Moving up.", "good");
@@ -662,7 +627,7 @@
                 logEvent(`${player === 'human' ? 'You' : 'AI'} climbed a ladder to ${finalPos}.`, 'good');
                 interactionOccurred = true;
             } 
-            // Check Snakes
+
             else if (SNAKES[pos]) {
                 finalPos = SNAKES[pos];
                 showToast("🐍 Oh no, a Snake! Sliding down.", "bad");
@@ -670,10 +635,10 @@
                 logEvent(`${player === 'human' ? 'You' : 'AI'} slid down a snake to ${finalPos}.`, 'bad');
                 interactionOccurred = true;
             }
-            // Check Random Career Events (only if didn't hit snake/ladder)
-            else if (Math.random() < 0.15) { // 15% chance
+
+            else if (Math.random() < 0.15) {
                 const event = EVENTS[Math.floor(Math.random() * EVENTS.length)];
-                finalPos = Math.max(1, Math.min(100, pos + event.move)); // Keep within bounds
+                finalPos = Math.max(1, Math.min(100, pos + event.move));
                 
                 showToast(`💼 ${event.text}`, event.type);
                 playSound(event.type);
@@ -681,15 +646,13 @@
                 interactionOccurred = true;
             }
 
-            // Apply secondary move if interaction happened
             if (interactionOccurred) {
-                await sleep(800); // Pause to read toast
+                await sleep(800);
                 updatePosition(player, finalPos);
                 updateUI();
                 await sleep(600);
             }
 
-            // Final win check after interactions
             const humanPosition = state.humanPos;
             const aiPosition = state.aiPos;
             if (humanPosition >= 100 || aiPosition >= 100) {
@@ -697,7 +660,6 @@
                 return;
             }
 
-            // 5. Pass Turn
             state.currentPlayer = nextPlayer;
             state.isAnimating = false;
             updateTurnUI();
@@ -710,8 +672,6 @@
                 els.rollBtn.disabled = false;
             }
         }
-
-        // --- State Updaters ---
 
         function updatePosition(player, newPos) {
             if (player === 'human') state.humanPos = newPos;
@@ -761,7 +721,7 @@
             
             els.modal.style.display = 'block';
             els.modal.classList.remove('hidden');
-            // Trigger animation
+
             setTimeout(() => {
                 els.modalContent.classList.remove('scale-95');
                 els.modalContent.classList.add('scale-100');
@@ -778,15 +738,12 @@
             }
         }
 
-        // --- Visual & UI Updaters ---
-
         function updateUI() {
-            // Remove all existing highlights/classes
+
             document.querySelectorAll('.cell').forEach(c => {
                 c.classList.remove('has-human', 'has-ai', 'current-player-glow');
             });
 
-            // Add highlights to current cells
             const hCell = document.getElementById(`cell-${state.humanPos}`);
             const aCell = document.getElementById(`cell-${state.aiPos}`);
             
@@ -795,11 +752,9 @@
             if (state.currentPlayer === 'human' && hCell) hCell.classList.add('current-player-glow');
             if (state.currentPlayer === 'ai' && aCell) aCell.classList.add('current-player-glow');
 
-            // Update stats text
             els.humanPosText.innerText = state.humanPos;
             els.aiPosText.innerText = state.aiPos;
 
-            // Update progress bars
             els.humanProgress.style.width = `${state.humanPos}%`;
             els.aiProgress.style.width = `${state.aiPos}%`;
         }
@@ -814,12 +769,12 @@
                 els.turnIndicator.innerText = "Your Turn";
                 els.turnIndicator.classList.replace('text-rose-400', 'text-sky-400');
                 
-                // Highlight active card
+
                 els.humanCard.classList.replace('border-sky-500/30', 'border-sky-400');
                 els.humanCard.classList.replace('bg-sky-500/10', 'bg-sky-500/20');
                 els.humanCard.classList.add('shadow-[0_0_15px_rgba(56,189,248,0.2)]');
                 
-                // Dim inactive card
+
                 els.aiCard.classList.replace('border-rose-400', 'border-rose-500/10');
                 els.aiCard.classList.replace('bg-rose-500/20', 'bg-slate-800/50');
                 els.aiCard.classList.remove('shadow-[0_0_15px_rgba(244,63,94,0.2)]');
@@ -831,12 +786,12 @@
                 els.turnIndicator.innerText = "AI is thinking...";
                 els.turnIndicator.classList.replace('text-sky-400', 'text-rose-400');
                 
-                // Highlight active card
+
                 els.aiCard.classList.replace('border-rose-500/10', 'border-rose-400');
                 els.aiCard.classList.replace('bg-slate-800/50', 'bg-rose-500/20');
                 els.aiCard.classList.add('shadow-[0_0_15px_rgba(244,63,94,0.2)]');
                 
-                // Dim inactive card
+
                 els.humanCard.classList.replace('border-sky-400', 'border-sky-500/30');
                 els.humanCard.classList.replace('bg-sky-500/20', 'bg-sky-500/10');
                 els.humanCard.classList.remove('shadow-[0_0_15px_rgba(56,189,248,0.2)]');
@@ -847,12 +802,10 @@
             }
         }
 
-        // --- Utilities ---
-
         function showToast(message, type = "neutral") {
             const toast = document.createElement('div');
             
-            // Color logic based on type
+
             let bgClass = "bg-slate-800 border-slate-700";
             let textClass = "text-white";
             
@@ -869,7 +822,6 @@
             
             els.toastContainer.appendChild(toast);
 
-            // Remove after 3 seconds
             setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateX(100%)';
@@ -891,18 +843,16 @@
                 <span class="text-slate-300">${message}</span>
             `;
             
-            els.log.prepend(entry); // Add to top
+            els.log.prepend(entry);
             
-            // Keep log manageable
+
             if (els.log.children.length > 20) {
                 els.log.lastChild.remove();
             }
         }
 
-        // Simple promise wrapper for timeouts to use with async/await
         const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-        // Start the game immediately
         init();
 
     </script>
